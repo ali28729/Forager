@@ -49,9 +49,9 @@ CONSTRAINT user_session_pk PRIMARY KEY(user_ID,Session_ID)
 );
 
 CREATE TABLE Anchors_From(
-source_ID INT REFERENCES Document(doc_ID),
-target_ID INT REFERENCES Document(doc_ID),
-anchor_Text VARCHAR(50)
+source_ID INT REFERENCES Document(doc_ID) ON DELETE CASCADE,
+target_ID INT REFERENCES Document(doc_ID) ON DELETE CASCADE,
+anchor_Text VARCHAR(150)
 );
 
 CREATE TABLE Hits(
