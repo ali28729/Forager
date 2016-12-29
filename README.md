@@ -6,5 +6,5 @@ MySQL DBMS is used for indexing purposes.
 
 Libraries Used:
   Beautiful Soup (For Html Parsing),
-  pymysql (For Connect MySQL with Python)
+  pymysql (To Connect MySQL with Python)
   
