@@ -45,9 +45,7 @@ for page in pageList:
     else:
         indexed.add(pageURL.string)
 
-    print(pageID)
-    print(oldindexed)
-    if pageID in oldindexed:
+    if int(pageID) in oldindexed:
         print('DELETING')
         curr.execute("""DELETE FROM document WHERE doc_id =%s;""",pageID)
 
@@ -109,8 +107,11 @@ for page in pageList:
     #Done: Add page data to the database "document" table. If already added, do cleanup of data
     pageURL=replace_trash(pageURL)
     h1Contents=replace_trash(h1Contents)
-    curr.execute("""INSERT INTO document (doc_ID, doc_URL, pageRank, doc_Title) VALUES
-                    (%s, %s,null, %s)""", (pageID, pageURL, h1Contents))
+    try:
+        curr.execute("""INSERT INTO document (doc_ID, doc_URL, pageRank, doc_Title) VALUES
+                    (%s, %s,null, %s)""", (pageID, pageURL, h1Contents[0:100]))
+    except pymysql.err.DataError:
+        pass
 
     h1List = h1Contents.split()
     h2List = h2Contents.split()
@@ -132,46 +133,43 @@ for page in pageList:
             if word not in wordSet:
                 wordSet[word]=len(wordSet)+1
                 try:
-                    curr.execute("""INSERT INTO word VALUES (%s,%s);""", (wordSet[word],word))
+                    curr.execute("""INSERT INTO word VALUES (%s,%s);""", (wordSet[word],word[0:30]))
                 except pymysql.err.IntegrityError:
-                    pass
-                except pymysql.err.DataError:
                     pass
             wordID=wordSet[word]
             curr.execute("""INSERT INTO hits VALUES (%s,%s,%s,%s,false);""", (pageID,wordID,i,j))
     wordSet.update(newWordSet)
-    print(h1List)
-    #print(h2List)
-    # print(h3List)
-    # print(h4List)
-    # print(h5List)
-    # print(h6List)
-    # print(pList)
     conn.commit()
+    print(len( indexed))
 
 curr.execute('SELECT doc_id,doc_URL FROM document;')
 URLtoID=dict()
 for row in curr:
     URLtoID[row[1]]=row[0]
 
-for anchor in anchors:
-    if anchor in URLtoID:
-        anchor = URLtoID[anchor]
-    else:
-        anchors.remove(anchor)
+IDanchors=[]
 
 for anchor in anchors:
-    print(anchor)
+    if anchor[1] in URLtoID:
+        IDanchors.append((anchor[0],URLtoI^D[anchor[1]],anchor[2]))
+    anchors.remove(anchor)
+
+print(IDanchors)
+
+for anchor in IDanchors:
+    #print(anchor)
     if anchor[2] is not None:
+        curr.execute("""INSERT INTO anchors_from VALUES (%s,%s,%s);""", (anchor[0],anchor[1],anchor[2][0:150]))
         anchortext=anchor[2].split()
         for word in anchortext:
             if word not in wordSet:
                 wordSet[word]=len(wordSet)+1
                 try:
-                    curr.execute("""INSERT INTO word VALUES (%s,%s);""", (wordSet[word],word))
+                    curr.execute("""INSERT INTO word VALUES (%s,%s);""", (wordSet[word],word[0:30]))
                 except pymysql.err.IntegrityError:
                     pass
                 except pymysql.err.DataError:
                     pass
             wordID=wordSet[word]
-            curr.execute("""INSERT INTO hits VALUES (%s,%s,0,0,true);""", (pageID,wordID))
+            curr.execute("""INSERT INTO hits VALUES (%s,%s,0,0,true);""", (anchor[1],wordID))
+conn.commit()
