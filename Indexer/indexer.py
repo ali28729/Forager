@@ -1,19 +1,36 @@
+__author__ = 'Sohaib'
 from bs4 import BeautifulSoup,Comment
 from os import listdir
 from urllib.parse import urljoin
 import pymysql
 import string
+from unidecode import unidecode
+
+def replace_trash(unicode_string):
+     for i in range(0, len(unicode_string)):
+         try:
+             unicode_string[i].encode("ascii")
+         except:
+              #means it's non-ASCII
+              unicode_string.replace(unicode_string[i],"") #replacing it with a single space
+     return unicode_string
 
 basePath=r'C://Users//Sohaib//Desktop//HTMLPages//'
 pageList= listdir(basePath)
 baseURL='https://en.wikipedia.org/wiki/'
 
 anchors=[]
+indexed=set()
+oldindexed=set()
 wordSet = dict()
-conn = pymysql.connect(host='localhost', port=3306, user='root', passwd='of88line', db='Forager')
+conn = pymysql.connect(host='localhost', port=3306, user='root', passwd='of88line', db='Forager', use_unicode=True, charset="utf8")
 curr = conn.cursor()
-curr.execute("""SELECT word,word_id FROM word;""")
 
+curr.execute("""SELECT doc_id FROM document;""")
+for row in curr:
+    oldindexed.add(row[0])
+
+curr.execute("""SELECT word,word_id FROM word;""")
 for row in curr:
     wordSet[row[0]]=row[1]
 
@@ -23,8 +40,17 @@ for page in pageList:
     newWordSet = dict()
     pageURL = soup.findAll(text=lambda text:isinstance(text, Comment))[0]
 
-    for i in range(1,7):
-        print(i)
+    if pageURL in indexed:
+        continue
+    else:
+        indexed.add(pageURL.string)
+
+    print(pageID)
+    print(oldindexed)
+    if pageID in oldindexed:
+        print('DELETING')
+        curr.execute("""DELETE FROM document WHERE doc_id =%s;""",pageID)
+
     h1tags = soup.find_all('h1')
     h2tags = soup.find_all('h2')
     h3tags = soup.find_all('h3')
@@ -81,6 +107,8 @@ for page in pageList:
                 anchors.append((pageID, urljoin(baseURL, link['href']), link.string))
 
     #Done: Add page data to the database "document" table. If already added, do cleanup of data
+    pageURL=replace_trash(pageURL)
+    h1Contents=replace_trash(h1Contents)
     curr.execute("""INSERT INTO document (doc_ID, doc_URL, pageRank, doc_Title) VALUES
                     (%s, %s,null, %s)""", (pageID, pageURL, h1Contents))
 
@@ -92,19 +120,25 @@ for page in pageList:
     h6List = h6Contents.split()
     pList = pContents.split()
 
-    i=0
-    for word in h1List:
-        i+=1
-        if word in wordSet:
-            wordID=wordSet[word]
-        else:
-            if word not in newWordSet:
-            newWordSet[word]=len(wordSet)+len(newWordSet)+1
-            wordID=newWordSet[word]
-            curr.execute("""INSERT INTO word VALUES (%s,%s);""", (wordID,word))
-        curr.execute("""INSERT INTO hits VALUES (%s,%s,%s,7,false);""", (pageID,wordID,i))
 
-    #TODO: Add the newWordSet to the words table in DataBase
+
+    listOflists=[pList,h6List,h5List,h4List,h3List,h2List,h1List]
+    j=0
+    for list in listOflists:
+        j+=1
+        i=0
+        for word in list:
+            i+=1
+            if word not in wordSet:
+                wordSet[word]=len(wordSet)+1
+                try:
+                    curr.execute("""INSERT INTO word VALUES (%s,%s);""", (wordSet[word],word))
+                except pymysql.err.IntegrityError:
+                    pass
+                except pymysql.err.DataError:
+                    pass
+            wordID=wordSet[word]
+            curr.execute("""INSERT INTO hits VALUES (%s,%s,%s,%s,false);""", (pageID,wordID,i,j))
     wordSet.update(newWordSet)
     print(h1List)
     #print(h2List)
@@ -114,3 +148,30 @@ for page in pageList:
     # print(h6List)
     # print(pList)
     conn.commit()
+
+curr.execute('SELECT doc_id,doc_URL FROM document;')
+URLtoID=dict()
+for row in curr:
+    URLtoID[row[1]]=row[0]
+
+for anchor in anchors:
+    if anchor in URLtoID:
+        anchor = URLtoID[anchor]
+    else:
+        anchors.remove(anchor)
+
+for anchor in anchors:
+    print(anchor)
+    if anchor[2] is not None:
+        anchortext=anchor[2].split()
+        for word in anchortext:
+            if word not in wordSet:
+                wordSet[word]=len(wordSet)+1
+                try:
+                    curr.execute("""INSERT INTO word VALUES (%s,%s);""", (wordSet[word],word))
+                except pymysql.err.IntegrityError:
+                    pass
+                except pymysql.err.DataError:
+                    pass
+            wordID=wordSet[word]
+            curr.execute("""INSERT INTO hits VALUES (%s,%s,0,0,true);""", (pageID,wordID))
