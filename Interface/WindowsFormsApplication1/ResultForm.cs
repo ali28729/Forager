@@ -12,9 +12,8 @@ namespace WindowsFormsApplication1
 {
     public partial class ResultForm : Form
     {
-        public List<string> links;
-        public List<string> titles;
-        public List<LinkLabel> linkLabels;
+        public List<Page> pages;
+        public List<LinkLabel> linkLabels=new List<LinkLabel>();
 
         public ResultForm()
         {
@@ -45,15 +44,16 @@ namespace WindowsFormsApplication1
         private void ResultForm_Load(object sender, EventArgs e)
         {
             int i=-1;
-            foreach(var item in titles)
+            foreach(var page in pages)
             {
                 i++;
-                linkLabels[i].Text = item;
+                if (i > 9)
+                    break;
+                linkLabels[i].Text = page.title;
+                linkLabels[i].Text = linkLabels[i].Text.First().ToString().ToUpper() + String.Join("", linkLabels[i].Text.Skip(1));
+               
                 linkLabels[i].Show();
             }
-
-            foreach (var item in links)
-                links.Add(item);
         }
 
         private void link1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -108,7 +108,7 @@ namespace WindowsFormsApplication1
 
         void openLink(int index)
         {
-            System.Diagnostics.Process.Start(links[index]);
+            System.Diagnostics.Process.Start(pages.ElementAt(index).url);
         }
 
         private void button1_Click(object sender, EventArgs e)
