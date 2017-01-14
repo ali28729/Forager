@@ -31,7 +31,6 @@
             this.loggedAsLabel = new System.Windows.Forms.Label();
             this.SearchLabel = new System.Windows.Forms.Label();
             this.SearchTextBox = new System.Windows.Forms.TextBox();
-            this.SearchResultsText = new System.Windows.Forms.TextBox();
             this.GoButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -62,17 +61,7 @@
             this.SearchTextBox.Name = "SearchTextBox";
             this.SearchTextBox.Size = new System.Drawing.Size(204, 20);
             this.SearchTextBox.TabIndex = 2;
-            // 
-            // SearchResultsText
-            // 
-            this.SearchResultsText.Cursor = System.Windows.Forms.Cursors.Default;
-            this.SearchResultsText.Location = new System.Drawing.Point(25, 70);
-            this.SearchResultsText.Multiline = true;
-            this.SearchResultsText.Name = "SearchResultsText";
-            this.SearchResultsText.Size = new System.Drawing.Size(277, 178);
-            this.SearchResultsText.TabIndex = 3;
-            this.SearchResultsText.WordWrap = false;
-            this.SearchResultsText.TextChanged += new System.EventHandler(this.SearchResultsText_TextChanged);
+            this.SearchTextBox.TextChanged += new System.EventHandler(this.SearchTextBox_TextChanged);
             // 
             // GoButton
             // 
@@ -86,11 +75,11 @@
             // 
             // Form1
             // 
+            this.AcceptButton = this.GoButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(332, 256);
+            this.ClientSize = new System.Drawing.Size(327, 83);
             this.Controls.Add(this.GoButton);
-            this.Controls.Add(this.SearchResultsText);
             this.Controls.Add(this.SearchTextBox);
             this.Controls.Add(this.SearchLabel);
             this.Controls.Add(this.loggedAsLabel);
@@ -107,7 +96,6 @@
         private System.Windows.Forms.Label loggedAsLabel;
         private System.Windows.Forms.Label SearchLabel;
         private System.Windows.Forms.TextBox SearchTextBox;
-        private System.Windows.Forms.TextBox SearchResultsText;
         private System.Windows.Forms.Button GoButton;
 
     }
